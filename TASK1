@@ -1,0 +1,86 @@
+import datetime
+
+class LibraryItem:
+    def __init__(self, title, author, category, item_id):
+        self.title = title
+        self.author = author
+        self.category = category
+        self.item_id = item_id
+        self.is_checked_out = False
+        self.due_date = None
+
+    def __str__(self):
+        return f"{self.category}: {self.title} by {self.author} (ID: {self.item_id})"
+
+class Library:
+    def __init__(self):
+        self.items = []
+        self.checked_out_items = {}
+
+    def add_item(self, title, author, category, item_id):
+        item = LibraryItem(title, author, category, item_id)
+        self.items.append(item)
+        print(f"Added {item}")
+
+    def checkout_item(self, item_id, due_days=14):
+        for item in self.items:
+            if item.item_id == item_id and not item.is_checked_out:
+                item.is_checked_out = True
+                item.due_date = datetime.date.today() + datetime.timedelta(days=due_days)
+                self.checked_out_items[item_id] = item.due_date
+                print(f"Checked out {item}. Due on {item.due_date}.")
+                return
+        print("Item not available for checkout.")
+
+    def return_item(self, item_id):
+        if item_id in self.checked_out_items:
+            for item in self.items:
+                if item.item_id == item_id:
+                    item.is_checked_out = False
+                    item.due_date = None
+                    del self.checked_out_items[item_id]
+                    print(f"Returned {item}.")
+                    return
+        print("Item not found or not checked out.")
+
+    def calculate_fine(self, item_id, current_date):
+        if item_id in self.checked_out_items:
+            due_date = self.checked_out_items[item_id]
+            if current_date > due_date:
+                overdue_days = (current_date - due_date).days
+                fine = overdue_days * 0.5  # Assume fine is $0.50 per day
+                return fine
+        return 0
+
+    def search_items(self, title=None, author=None, category=None):
+        results = []
+        for item in self.items:
+            if ((title and title.lower() in item.title.lower()) or 
+                (author and author.lower() in item.author.lower()) or 
+                (category and category.lower() in item.category.lower())):
+                results.append(item)
+        return results
+
+# Example usage
+library = Library()
+
+# Adding items to the library
+library.add_item("The Great Gatsby", "F. Scott Fitzgerald", "Book", 1)
+library.add_item("To Kill a Mockingbird", "Harper Lee", "Book", 2)
+library.add_item("Time Magazine", "Various", "Magazine", 3)
+library.add_item("Inception", "Christopher Nolan", "DVD", 4)
+
+# Checking out an item
+library.checkout_item(1)
+
+# Returning an item
+library.return_item(1)
+
+# Checking fines
+current_date = datetime.date.today() + datetime.timedelta(days=16)  # Assuming today is 16 days later
+fine = library.calculate_fine(1, current_date)
+print(f"Fine for item 1: ${fine}")
+
+# Searching for items
+search_results = library.search_items(title="Great")
+print("Search results:", search_results)
